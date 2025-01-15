@@ -1,0 +1,15 @@
+/* 大尺寸操作按钮通用样式 */
+.operation-btn {
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 16px;
+}
+
+/* 移动端特别处理 */
+@media screen and (max-width: 768px) {
+  .operation-btn {
+    min-width: 54px;
+    min-height: 54px;
+    font-size: 18px;
+  }
+} 
