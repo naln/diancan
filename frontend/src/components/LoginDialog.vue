@@ -92,7 +92,16 @@ const getSavedLoginInfo = () => {
 // 保存登录信息
 const saveLoginInfo = (info) => {
   const key = `login_${props.type}`
-  localStorage.setItem(key, JSON.stringify(info))
+  if (loginForm.value.remember) {
+    localStorage.setItem(key, JSON.stringify({
+      username: loginForm.value.username,
+      password: loginForm.value.password,
+      remember: true
+    }))
+  } else {
+    // 如果没有选择记住密码，清除保存的信息
+    localStorage.removeItem(key)
+  }
 }
 
 // 清除登录信息
@@ -154,12 +163,8 @@ const handleLogin = async () => {
       // 登录成功处理
       store.commit('SET_USER', response.data.data.user)
       
-      // 如果选择了记住密码，保存登录信息
-      if (loginForm.value.remember) {
-        saveLoginInfo()
-      } else {
-        clearLoginInfo()
-      }
+      // 保存或清除登录信息
+      saveLoginInfo()
       
       dialogVisible.value = false
       ElMessage.success('登录成功')

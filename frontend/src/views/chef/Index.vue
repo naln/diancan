@@ -443,6 +443,12 @@ const handleConfirm = async () => {
   font-weight: bold;
 }
 
+:deep(.el-button-group .el-button) {
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  font-size: 24px;
+}
 .confirm-footer {
   padding: 20px;
   border-top: 1px solid #ebeef5;
