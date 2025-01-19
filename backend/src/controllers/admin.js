@@ -210,6 +210,12 @@ class AdminController {
     try {
       const { id } = ctx.params
       const updateData = ctx.request.body
+      
+      // 如果没有提供新密码，删除密码字段，避免覆盖原密码
+      if (!updateData.password) {
+        delete updateData.password
+      }
+      
       const user = await User.findByIdAndUpdate(
         id,
         updateData,
