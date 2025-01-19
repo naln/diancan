@@ -43,9 +43,27 @@ class AdminController {
     try {
       const dishData = ctx.request.body
       
+      // 验证必要字段
+      if (!dishData.name) {
+        ctx.throw(400, '菜品名称不能为空')
+      }
+      
       // 确保价格是数字类型
-      if (dishData.price) {
-        dishData.price = Number(dishData.price)
+      dishData.price = dishData.price || 0  // 如果没有价格，默认为0
+      dishData.price = Number(dishData.price)
+      if (isNaN(dishData.price) || dishData.price < 0) {
+        ctx.throw(400, '价格必须是有效的数字且不能小于0')
+      }
+
+      // 设置默认值
+      dishData.description = dishData.description || ''  // 如果没有描述，默认为空字符串
+      dishData.status = dishData.status ?? true  // 如果没有状态，默认为true
+      dishData.image = dishData.image || ''  // 如果没有图片，默认为空字符串
+
+      // 检查菜品名称是否已存在
+      const existingDish = await Dish.findOne({ name: dishData.name })
+      if (existingDish) {
+        ctx.throw(400, '菜品名称已存在')
       }
 
       const dish = await Dish.create(dishData)
@@ -55,8 +73,19 @@ class AdminController {
         data: dish
       }
     } catch (error) {
-      console.error('添加菜品失败:', error)
-      ctx.throw(500, error.message)
+      console.error('添加菜品失败:', {
+        error,
+        data: ctx.request.body,
+        stack: error.stack
+      })
+      // 根据错误类型返回适当的状态码
+      if (error.status === 400) {
+        ctx.throw(400, error.message)
+      } else if (error.code === 11000) { // MongoDB 重复键错误
+        ctx.throw(400, '菜品名称已存在')
+      } else {
+        ctx.throw(500, error.message || '添加菜品失败，请重试')
+      }
     }
   }
 

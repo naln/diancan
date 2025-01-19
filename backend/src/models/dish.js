@@ -10,12 +10,10 @@ const dishSchema = new mongoose.Schema({
     },
     price: {
         type: Number,
-        required: [true, '价格不能为空'],
         min: [0, '价格不能小于0']
     },
     description: {
         type: String,
-        required: [true, '描述不能为空'],
         trim: true
     },
     image: {

@@ -136,14 +136,21 @@ const handleDishSubmit = async (formData) => {
       await store.$api.updateDish(currentDish.value._id, formData)
       ElMessage.success('更新成功')
     } else {
-      await store.$api.addDish(formData)
-      ElMessage.success('添加成功')
+      const response = await store.$api.addDish(formData)
+      if (response.data.success) {
+        ElMessage.success('添加成功')
+        showDishDialog.value = false
+        fetchDishes()
+      } else {
+        throw new Error(response.data.message || '添加失败')
+      }
     }
-    showDishDialog.value = false
-    fetchDishes()
   } catch (error) {
-    ElMessage.error('操作失败')
+    console.error('操作失败:', error)
+    ElMessage.error(error.response?.data?.message || '操作失败，请重试')
+    return false // 阻止对话框关闭
   }
+  return true // 允许对话框关闭
 }
 
 onMounted(() => {

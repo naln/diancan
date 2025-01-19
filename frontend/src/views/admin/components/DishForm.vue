@@ -169,7 +169,10 @@ const handleSubmit = async () => {
   
   try {
     await formRef.value.validate()
-    emit('submit', { ...form.value })
+    const success = await emit('submit', { ...form.value })
+    if (success) {
+      dialogVisible.value = false
+    }
   } catch (error) {
     console.error('表单验证失败:', error)
   }
