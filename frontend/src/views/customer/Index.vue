@@ -209,12 +209,20 @@ const handleSubmit = async () => {
 onMounted(() => {
   fetchDishes()
   fetchOrders()
-  // 更频繁地检查订单状态
-  const timer = setInterval(fetchOrders, 3000)
+  // 在用户首次交互时初始化语音
+  const initSpeech = () => {
+    speech.init()
+    document.removeEventListener('click', initSpeech)
+  }
+  document.addEventListener('click', initSpeech)
+  
+  // 启动定时更新
+  const updateTimer = ref(null)
+  updateTimer.value = setInterval(fetchOrders, 5000)
   
   // 组件销毁时清理定时器
   onUnmounted(() => {
-    clearInterval(timer)
+    clearInterval(updateTimer.value)
   })
 })
 </script>
