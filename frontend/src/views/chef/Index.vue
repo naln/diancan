@@ -180,35 +180,43 @@ const handleComplete = async () => {
   if (!selectedDish.value) return
   
   try {
-    const processingOrders = new Set() // 用于跟踪正在处理的订单
+    let completedCount = 0 // 跟踪已完成的数量
+    let targetCount = completeQuantity.value // 目标完成数量
 
     // 遍历所有未完成的订单
     for (const order of orders.value) {
       if (order.status !== 'completed') {
-        order.items.forEach(async item => {
+        for (const item of order.items) {
           if (item.dish._id === selectedDish.value._id) {
             const remainingQuantity = item.quantity - (item.completedQuantity || 0)
-            if (remainingQuantity > 0) {
-              // 检查这个订单是否已经在处理中
-              if (processingOrders.has(order._id)) {
-                return
-              }
-              processingOrders.add(order._id)
+            if (remainingQuantity > 0 && completedCount < targetCount) {
+              const updateQuantity = Math.min(remainingQuantity, targetCount - completedCount)
 
               try {
                 // 更新完成数量
                 await store.$api.updateOrderItemQuantity(
                   order._id,
                   item.dish._id,
-                  { completedQuantity: completeQuantity.value }
+                  { completedQuantity: updateQuantity }
                 )
+                completedCount += updateQuantity
+                
+                // 如果已达到目标数量，退出循环
+                if (completedCount >= targetCount) {
+                  break
+                }
               } catch (error) {
                 console.error('更新完成数量失败:', error)
                 ElMessage.error('操作失败')
               }
             }
           }
-        })
+        }
+        
+        // 如果已达到目标数量，退出外层循环
+        if (completedCount >= targetCount) {
+          break
+        }
       }
     }
 

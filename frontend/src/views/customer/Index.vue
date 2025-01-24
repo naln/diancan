@@ -205,6 +205,10 @@ const handleSubmit = async () => {
     
     store.commit('CLEAR_CART')
     ElMessage.success('订单提交成功')
+    // 立即刷新数据
+    await Promise.all([
+      fetchOrders()
+    ])
   } catch (error) {
     console.error('提交订单失败:', error)
     ElMessage.error(error.response?.data?.message || '提交订单失败')
