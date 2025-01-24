@@ -23,16 +23,12 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      }
-    }
+    host: '0.0.0.0',  // 允许外部 IP 访问
   },
   build: {
     // 生产环境配置
     chunkSizeWarningLimit: 2000, // 提高代码分割警告阈值
+    target: ['es2015', 'safari11'],
     rollupOptions: {
       output: {
         entryFileNames: `assets/[name]-[hash].js`,
@@ -50,6 +46,6 @@ export default defineConfig({
     sourcemap: true
   },
   optimizeDeps: {
-    include: ['xlsx']
+    include: ['xlsx', 'speech-synthesis']
   }
 }) 

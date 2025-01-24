@@ -180,52 +180,48 @@ const handleComplete = async () => {
   if (!selectedDish.value) return
   
   try {
-    let remainingQuantity = completeQuantity.value
-    let completedOrders = 0  // 添加计数器
-    
-    // 按订单顺序完成菜品
-    for (const orderItem of selectedDish.value.orders) {
-      if (remainingQuantity <= 0) break
-      
-      const quantity = Math.min(remainingQuantity, orderItem.quantity)
-      await store.$api.updateOrderItemQuantity(
-        orderItem.orderId,
-        orderItem.dishId,
-        { completedQuantity: quantity }
-      )
-      
-      remainingQuantity -= quantity
-      completedOrders++  // 增加完成订单计数
+    // 遍历所有未完成的订单
+    for (const order of orders.value) {
+      if (order.status !== 'completed') {
+        const item = order.items.find(item => 
+          item.dish._id === selectedDish.value._id &&
+          item.quantity > (item.completedQuantity || 0)
+        )
+        
+        if (item) {
+          await store.$api.updateOrderItemQuantity(
+            order._id,
+            item.dish._id,
+            { completedQuantity: completeQuantity.value }
+          )
+        }
+      }
     }
     
-    // 播报完成信息
-    const message = `已完成${completedOrders}碗${selectedDish.value.name}，请及时取用`
-    console.log('播报信息:', message)  // 保留日志输出
-    
-    // 重新获取订单数据
-    await fetchOrders()
+    // 重置选择和数量
     selectedDish.value = null
     completeQuantity.value = 1
     
-    ElMessage.success('已完成')
+    // 刷新订单列表
+    await fetchOrders()
+    
+    ElMessage.success('已确认完成')
   } catch (error) {
-    console.error('更新失败:', error)
-    ElMessage.error('更新失败')
+    console.error('确认完成失败:', error)
+    ElMessage.error('确认完成失败')
   }
 }
 
 // 获取订单列表
 const fetchOrders = async () => {
-  loading.value = true
   try {
     const response = await store.$api.getOrders()
-    orders.value = response.data.data
+    const newOrders = response.data.data
+    
+    orders.value = newOrders
   } catch (error) {
-    console.error('获取订单失败:', error)
-    ElMessage.error('获取订单失败')
-    orders.value = []
-  } finally {
-    loading.value = false
+    console.error('获取订单列表失败:', error)
+    ElMessage.error('获取订单列表失败')
   }
 }
 
@@ -253,42 +249,6 @@ onMounted(() => {
 onUnmounted(() => {
   stopAutoUpdate()
 })
-
-// 确认完成
-const handleConfirm = async () => {
-  if (!selectedItems.value.length) {
-    ElMessage.warning('请先选择要完成的菜品')
-    return
-  }
-
-  confirming.value = true
-  try {
-    const items = selectedItems.value.map(item => ({
-      orderId: item.orderId,
-      dishId: item.dishId,
-      quantity: item.quantity
-    }))
-
-    await store.$api.completeOrderItems(items)
-    
-    // 根据开关状态决定是否播报
-    if (enableSpeech.value) {
-      const totalOrders = new Set(selectedItems.value.map(item => item.orderId)).size
-      const dishName = selectedItems.value[0].name
-      const message = `已完成${totalOrders}单${dishName}`
-      speech.speak(message)
-    }
-    
-    ElMessage.success('操作成功')
-    selectedItems.value = []
-    fetchOrders()
-  } catch (error) {
-    console.error('确认完成失败:', error)
-    ElMessage.error('操作失败，请重试')
-  } finally {
-    confirming.value = false
-  }
-}
 </script>
 
 <style scoped>

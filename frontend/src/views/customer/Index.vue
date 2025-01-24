@@ -87,6 +87,8 @@ const submitting = ref(false)
 const dishes = ref([])
 const orders = ref([])
 const completedItems = ref(new Set())
+const speechInitialized = ref(false)
+const updateTimer = ref(null)  // 用于存储定时器ID
 
 // 购物车数据
 const cart = computed(() => store.state.cart)
@@ -143,11 +145,15 @@ const fetchOrders = async () => {
           .find(o => o._id === order._id)
           ?.items.find(i => i.dish._id === item.dish._id)
         
-        // 只有当完成数量增加时才播报
-        if (oldItem && item.completedQuantity > oldItem.completedQuantity) {
+        // 只有当完成数量增加且语音已初始化时才播报
+        if (oldItem && item.completedQuantity > oldItem.completedQuantity && speechInitialized.value) {
           const newCompleted = item.completedQuantity - oldItem.completedQuantity
-          // 播报新完成的项目
-          speech.speak(`已完成${newCompleted}碗${item.dish.name}，请及时取用`)
+          console.log(`准备播放语音: ${newCompleted}碗${item.dish.name}，请及时取用`)
+          console.log(`语音状态: initialized=${speechInitialized.value}, speaking=${speech.speaking}`)
+          speech.speakWithDelay(`已完成${newCompleted}碗${item.dish.name}，请及时取用`)
+            .catch(error => {
+              console.error('语音播报失败:', error)
+            })
         }
       })
     })
@@ -196,6 +202,7 @@ const handleSubmit = async () => {
     }))
 
     await store.$api.createOrder({ items })
+    
     store.commit('CLEAR_CART')
     ElMessage.success('订单提交成功')
   } catch (error) {
@@ -206,24 +213,48 @@ const handleSubmit = async () => {
   }
 }
 
+// 初始化语音
+const initSpeech = () => {
+  try {
+    speech.init()
+    speechInitialized.value = true
+    console.log('语音初始化成功')
+    // 测试语音播放
+    speech.speakWithDelay('语音系统已就绪')
+      .catch(error => {
+        console.error('测试语音播放失败:', error)
+      })
+  } catch (error) {
+    console.error('语音初始化失败:', error)
+    ElMessage.error('语音初始化失败')
+  }
+}
+
+// 开始定时更新
+const startAutoUpdate = () => {
+  // 每5秒更新一次订单数据
+  updateTimer.value = setInterval(fetchOrders, 5000)
+}
+
+// 停止定时更新
+const stopAutoUpdate = () => {
+  if (updateTimer.value) {
+    clearInterval(updateTimer.value)
+    updateTimer.value = null
+  }
+}
+
 onMounted(() => {
   fetchDishes()
   fetchOrders()
-  // 在用户首次交互时初始化语音
-  const initSpeech = () => {
-    speech.init()
-    document.removeEventListener('click', initSpeech)
-  }
-  document.addEventListener('click', initSpeech)
-  
-  // 启动定时更新
-  const updateTimer = ref(null)
-  updateTimer.value = setInterval(fetchOrders, 5000)
-  
-  // 组件销毁时清理定时器
-  onUnmounted(() => {
-    clearInterval(updateTimer.value)
-  })
+  startAutoUpdate()  // 开始定时更新
+  // 自动初始化语音
+  initSpeech()
+})
+
+// 组件销毁时清理定时器
+onUnmounted(() => {
+  stopAutoUpdate()
 })
 </script>
 
