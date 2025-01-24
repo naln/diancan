@@ -24,7 +24,7 @@ app.use(cors({
   origin: '*',
   credentials: false,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization']
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }))
 app.use(koaBody({
   multipart: true,
