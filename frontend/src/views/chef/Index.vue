@@ -180,24 +180,38 @@ const handleComplete = async () => {
   if (!selectedDish.value) return
   
   try {
+    const processingOrders = new Set() // 用于跟踪正在处理的订单
+
     // 遍历所有未完成的订单
     for (const order of orders.value) {
       if (order.status !== 'completed') {
-        const item = order.items.find(item => 
-          item.dish._id === selectedDish.value._id &&
-          item.quantity > (item.completedQuantity || 0)
-        )
-        
-        if (item) {
-          await store.$api.updateOrderItemQuantity(
-            order._id,
-            item.dish._id,
-            { completedQuantity: completeQuantity.value }
-          )
-        }
+        order.items.forEach(async item => {
+          if (item.dish._id === selectedDish.value._id) {
+            const remainingQuantity = item.quantity - (item.completedQuantity || 0)
+            if (remainingQuantity > 0) {
+              // 检查这个订单是否已经在处理中
+              if (processingOrders.has(order._id)) {
+                return
+              }
+              processingOrders.add(order._id)
+
+              try {
+                // 更新完成数量
+                await store.$api.updateOrderItemQuantity(
+                  order._id,
+                  item.dish._id,
+                  { completedQuantity: completeQuantity.value }
+                )
+              } catch (error) {
+                console.error('更新完成数量失败:', error)
+                ElMessage.error('操作失败')
+              }
+            }
+          }
+        })
       }
     }
-    
+
     // 重置选择和数量
     selectedDish.value = null
     completeQuantity.value = 1
@@ -205,10 +219,10 @@ const handleComplete = async () => {
     // 刷新订单列表
     await fetchOrders()
     
-    ElMessage.success('已确认完成')
+    ElMessage.success('操作成功')
   } catch (error) {
-    console.error('确认完成失败:', error)
-    ElMessage.error('确认完成失败')
+    console.error('完成菜品失败:', error)
+    ElMessage.error('操作失败')
   }
 }
 

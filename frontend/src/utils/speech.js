@@ -2,7 +2,7 @@ class SpeechUtil {
   constructor() {
     // 检查浏览器是否支持语音合成
     if (!window.speechSynthesis) {
-      console.error('当前浏览器不支持语音合成')
+      alert('当前浏览器不支持语音合成')
       return
     }
     this.synth = window.speechSynthesis
