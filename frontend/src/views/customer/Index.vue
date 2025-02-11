@@ -237,7 +237,7 @@ const initSpeech = () => {
 // 开始定时更新
 const startAutoUpdate = () => {
   // 每5秒更新一次订单数据
-  updateTimer.value = setInterval(fetchOrders, 5000)
+  updateTimer.value = setInterval(fetchOrders, 1000)
 }
 
 // 停止定时更新
