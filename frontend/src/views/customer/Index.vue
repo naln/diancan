@@ -376,6 +376,7 @@ onUnmounted(() => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   transition: transform 0.3s;
   cursor: pointer;
+  height: 42vh;
 }
 
 :deep(.dish-card:hover) {

@@ -298,7 +298,7 @@ onUnmounted(() => {
 .dish-card {
   display: flex;
   flex-direction: column;
-  height: 360px;
+  height: 42vh;
   background: white;
   border-radius: 8px;
   overflow: hidden;
